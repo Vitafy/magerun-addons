@@ -20,5 +20,8 @@
         "psr-0": {
             "Elgentos": "src/"
         }
+    },
+    "require-dev": {
+        "escapestudios/symfony2-coding-standard": "~2.0"
     }
 }

@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Addon commands for N98 MageRun",
     "keywords": ["magerun"],
-    "homepage": "https://github.com/peterjaap/magerun-addons",
+    "homepage": "https://github.com/vitafy/magerun-addons",
     "license": "MIT",
     "authors": [
         {
@@ -14,7 +14,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.3.0",
+        "magento-hackathon/magento-composer-installer": "*"
     },
     "autoload": {
         "psr-0": {

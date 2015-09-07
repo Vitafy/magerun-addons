@@ -1,1 +1,2 @@
-src/ lib/n98-magerun/modules/magerun-addons
+src/ lib/n98-magerun/modules/magerun-addons/src
+n98-magerun.yaml lib/n98-magerun/modules/magerun-addons/n98-magerun.yaml

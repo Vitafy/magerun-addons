@@ -1,6 +1,6 @@
 {
     "name": "peterjaap/magerun-addons",
-    "type": "library",
+    "type": "magento-module",
     "description": "Addon commands for N98 MageRun",
     "keywords": ["magerun"],
     "homepage": "https://github.com/vitafy/magerun-addons",

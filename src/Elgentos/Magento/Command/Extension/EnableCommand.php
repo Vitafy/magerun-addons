@@ -58,8 +58,9 @@ class EnableCommand extends AbstractMagentoCommand
                     $moduleNames,
                     0
                 );
+                $enableModule = true;
             } else {
-                if (array_search($name, $moduleNames)) {
+                if (array_search($name, $moduleNames) !== false) {
                     $moduleIndex = array_search($name, $moduleNames);
                     $enableModule = true;
                 } else {

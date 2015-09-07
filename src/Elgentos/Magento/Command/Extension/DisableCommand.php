@@ -59,7 +59,7 @@ class DisableCommand extends AbstractMagentoCommand
                 );
                 $disableModule = true;
             } else {
-                if (array_search($name, $moduleNames)) {
+                if (array_search($name, $moduleNames) !== false) {
                     $moduleIndex = array_search($name, $moduleNames);
                     $disableModule = true;
                 } else {

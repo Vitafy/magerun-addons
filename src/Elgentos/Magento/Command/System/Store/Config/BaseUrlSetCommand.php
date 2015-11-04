@@ -15,7 +15,8 @@ class BaseUrlSetCommand extends AbstractMagentoCommand
       $this
           ->setName('sys:store:config:base-url:set')
           ->setDescription('Set base-urls for installed storeviews [elgentos]')
-	  ->addOption('base_url','b',InputOption::VALUE_REQUIRED,'Fill out default base URL?', null)    
+	  ->addOption('base_url','b',InputOption::VALUE_REQUIRED,'Fill out default base URL?', null)
+	  ->addOption('skinjsmedia_defaults','s',InputOption::VALUE_OPTIONAL,'Reset skin/js/media base URLs to default?', null)    
 	  ;
     }
 
@@ -29,42 +30,64 @@ class BaseUrlSetCommand extends AbstractMagentoCommand
         $this->detectMagento($output);
         if ($this->initMagento()) {
            $config = $this->_getModel('core/config','Mage_Core_Model_Config');
-	   $dialog = $this->getHelperSet()->get('dialog');
+	        $dialog = $this->getHelperSet()->get('dialog');
+
+            if($input->getOption('skinjsmedia_defaults'))
+            {
+                foreach(array('secure','unsecure') as $secure) {
+                    foreach (array('skin', 'media', 'js') as $type) {
+                        $config->saveConfig(
+                            'web/' . $secure . '/base_' . $type . '_url',
+                            '{{' . $secure .'_base_url}}' . $type . '/',
+                            'default',
+                            0
+                        );
+                    }
+                }
+                $output->writeln('<info>Skin/media/js paths have been reset tot their defaults.</info>');
+            }
 
 	   $baseUrl = $input->getOption('base_url');
 	   if($baseUrl) {
-		$unsecureBaseURL = $secureBaseURL = $baseUrl;
 		$useSecureFrontend = 0;
-		$store = \Mage::getModel('core/store')->load(0);
-                $config->saveConfig(
-                    'web/unsecure/base_url',
-                    $unsecureBaseURL,
-                    ($store->getStoreId() == 0 ? 'default' : 'stores'),
-                    $store->getStoreId()
-                );
-                $output->writeln('<info>Unsecure base URL for store ' . $store->getName() . ' [' . $store->getCode() . '] set to ' .  $unsecureBaseURL . '</info>');
-        
-                $config->saveConfig(
-                    'web/secure/base_url',
-                    $secureBaseURL,
-                    ($store->getStoreId() == 0 ? 'default' : 'stores'),
-                    $store->getStoreId()
-                );
-                $output->writeln('<info>Secure base URL for store ' . $store->getName() . ' [' . $store->getCode() . '] set to ' .  $secureBaseURL . '</info>');
-        
-                $config->saveConfig(
-                    'web/secure/use_in_frontend',
-                    ($useSecureFrontend ? '1' : '0'),
-                    ($store->getStoreId() == 0 ? 'default' : 'stores'),
-                    $store->getStoreId()
-                );
-        
-                $config->saveConfig(
-                    'web/secure/use_in_adminhtml',
-                    ($useSecureFrontend ? '1' : '0'),
-                    ($store->getStoreId() == 0 ? 'default' : 'stores'),
-                    $store->getStoreId()
-                );
+           foreach(\Mage::getModel('core/store')->getCollection() as $store) {
+               $unsecureBaseURL = $secureBaseURL = $baseUrl;
+               if($store->getCode() != 'default') {
+                   list($domain,$tld) = explode('.', $unsecureBaseURL, 2);
+                   $domain .= '-' . $store->getCode();
+                   $unsecureBaseURL = $domain . '.' . $tld;
+                   $secureBaseURL = $unsecureBaseURL;
+               }
+               $config->saveConfig(
+                   'web/unsecure/base_url',
+                   $unsecureBaseURL,
+                   ($store->getStoreId() == 0 ? 'default' : 'stores'),
+                   $store->getStoreId()
+               );
+               $output->writeln('<info>Unsecure base URL for store ' . $store->getName() . ' [' . $store->getCode() . '] set to ' . $unsecureBaseURL . '</info>');
+
+               $config->saveConfig(
+                   'web/secure/base_url',
+                   $secureBaseURL,
+                   ($store->getStoreId() == 0 ? 'default' : 'stores'),
+                   $store->getStoreId()
+               );
+               $output->writeln('<info>Secure base URL for store ' . $store->getName() . ' [' . $store->getCode() . '] set to ' . $secureBaseURL . '</info>');
+
+               $config->saveConfig(
+                   'web/secure/use_in_frontend',
+                   ($useSecureFrontend ? '1' : '0'),
+                   ($store->getStoreId() == 0 ? 'default' : 'stores'),
+                   $store->getStoreId()
+               );
+
+               $config->saveConfig(
+                   'web/secure/use_in_adminhtml',
+                   ($useSecureFrontend ? '1' : '0'),
+                   ($store->getStoreId() == 0 ? 'default' : 'stores'),
+                   $store->getStoreId()
+               );
+           }
 		return;
 	   }
 
@@ -113,6 +136,7 @@ class BaseUrlSetCommand extends AbstractMagentoCommand
            $secureBaseURL = $dialog->ask($output, '<question>Secure base URL?</question> <comment>[' . $defaultSecure . ']</comment>', $defaultSecure);
            $useSecureFrontend = $dialog->askConfirmation($output, '<question>Use secure base URL in frontend?</question> <comment>[no]</comment> ', false);
            $useSecureBackend = $dialog->askConfirmation($output, '<question>Use secure base URL in backend?</question> <comment>[no]</comment> ', false);
+           $resetSkinMediaJsPaths = $dialog->askConfirmation($output, '<question>Reset skin/media/js paths to secure/unsecure defaults?</question> <comment>[yes]</comment> ', true);
            
            $config->saveConfig(
                 'web/unsecure/base_url',
@@ -139,10 +163,25 @@ class BaseUrlSetCommand extends AbstractMagentoCommand
            
            $config->saveConfig(
                 'web/secure/use_in_adminhtml',
-                ($useSecureFrontend ? '1' : '0'),
+                ($useSecureBackend ? '1' : '0'),
                 ($store->getStoreId() == 0 ? 'default' : 'stores'),
                 $store->getStoreId()
            );
+
+            if($resetSkinMediaJsPaths)
+            {
+                foreach(array('secure','unsecure') as $secure) {
+                    foreach (array('skin', 'media', 'js') as $type) {
+                        $config->saveConfig(
+                            'web/' . $secure . '/base_' . $type . '_url',
+                            '{{' . $secure .'_base_url}}' . $type . '/',
+                            ($store->getStoreId() == 0 ? 'default' : 'stores'),
+                            $store->getStoreId()
+                        );
+                    }
+                }
+                $output->writeln('<info>Skin/media/js paths have been reset tot their defaults.</info>');
+            }
         }
     }
 }

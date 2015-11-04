@@ -23,15 +23,7 @@ Here's the easiest:
 
         cd ~/.n98-magerun/modules/ && git clone git@github.com:peterjaap/magerun-addons.git
 
-3. Install via composer
-
-        3.1 Add the repository
-        composer config repositories.vfymagerun git https://github.com/Vitafy/magerun-addons
-
-        3.2 Add the depencency
-        composer require peterjaap/magerun-addons:dev-master
-
-4. It should be installed. To see that it was installed, check to see if one of the new commands is in there, like `media:sync`.
+3. It should be installed. To see that it was installed, check to see if one of the new commands is in there, like `media:sync`.
 
         n98-magerun.phar media:sync
 
@@ -105,6 +97,26 @@ Remove orphaned files from disk. Orphans are files which do exist on the disk bu
 A large number of customers enter their Tax/VAT number incorrectly. Common mistakes are prefixing the country code and using dots and/or spaces. This command loops through the taxvat fields already in the database and cleans them up. So 'nl 01.23.45.67 b01' (which won't validate) will become '01234567B01' (which will validate). This is useful for future purchases by these customers.
 
     $ n98-magerun.phar customer:clean-taxvat
+
+### Find non-whitelisted vars/blocks to be compatible with SUPEE-6788 and Magento 1.9.2.2
+
+Thanks to @timvroom for the bulk of the code.
+
+    dev:template-vars [--addblocks[="true|false"]] [--addvariables[="true|false"]]
+
+### Find extensions that use old-style admin routing (which is not compatible with SUPEE-6788 and Magento 1.9.2.2)
+
+    $ n98-magerun.phar dev:old-admin-routing
+
+### Find files that are affected by APPSEC-1063, addressing possible SQL injection
+
+    $ n98-magerun.phar dev:possible-sql-injection
+
+### Listen for all Magento events on the fly ###
+
+    $ n98-magerun.phar dev:events:listen
+
+When running this command, magerun will edit app/Mage.php to log the events to a temporary log file. This file will consequently being 'tailed'. When hitting CTRL-C the command will revert the adjustment to app/Mage.php and clean up the log file.
 
 ### Dispatch/fire a Magento event ###
 
